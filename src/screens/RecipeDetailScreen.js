@@ -24,28 +24,33 @@ export default function RecipeDetailScreen(props) {
     const [meal, setMeal] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(()=>{
-        getMealData(item.idMeal);
-    },[])
+    useEffect(() => {
+        const apiEndpoint = `http://192.168.100.129:5000/api/HotandHumid/${item.id}`;
+        getMealData(apiEndpoint);
+      }, []);
+      
 
-    const getMealData = async (id)=>{
-        try{
-          const response = await axios.get(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
-        //   console.log('got meal data: ',response.data);
-          if(response && response.data){
-            setMeal(response.data.meals[0]);
+      const getMealData = async (apiEndpoint) => {
+        try {
+          const response = await axios.get(apiEndpoint);
+          if (response && response.data) {
+            setMeal(response.data.recipe);
+            setLoading(false);
+          } else {
+            console.log('Recipe not found');
             setLoading(false);
           }
-        }catch(err){
-          console.log('error: ',err.message);
+        } catch (err) {
+          console.log('error: ', err.message);
         }
-    }
+      };
+      
 
     const ingredientsIndexes = (meal)=>{
         if(!meal) return [];
         let indexes = [];
         for(let i = 1; i<=20; i++){
-            if(meal['strIngredient'+i]){
+            if(meal['Ingredients'+i]){
                 indexes.push(i);
             }
         }
@@ -77,7 +82,7 @@ export default function RecipeDetailScreen(props) {
         {/* recipe image */}
         <View className="flex-row justify-center">
             <CachedImage
-                uri={item.strMealThumb}
+                uri={item.image}
                 // sharedTransitionTag={item.strMeal} // this will only work on native image (now using Image from expo-image)
                 style={{width: wp(100), height: hp(50),borderBottomLeftRadius: 40, borderBottomRightRadius: 40}}
 
@@ -103,13 +108,12 @@ export default function RecipeDetailScreen(props) {
                     {/* name and area */}
                     <Animated.View entering={FadeInDown.duration(700).springify().damping(12)} className="space-y-2">
                         <Text style={{fontSize: hp(3)}} className="font-bold flex-1 text-neutral-700">
-                            {meal?.strMeal}
+                        {meal?.Name}
                         </Text>
                         <Text style={{fontSize: hp(2)}} className="font-medium flex-1 text-neutral-500">
-                            {meal?.strArea}
+                            Desription
                         </Text>
                     </Animated.View>
-
                     {/* misc */}
                     <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} className="flex-row justify-around">
                         <View className="flex rounded-full bg-amber-300 p-2">
@@ -121,10 +125,7 @@ export default function RecipeDetailScreen(props) {
                             </View>
                             <View className="flex items-center py-2 space-y-1">
                                 <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
-                                    35
-                                </Text>
-                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
-                                    Mins
+                                    {meal?.CookingTime}
                                 </Text>
                             </View>
                         </View>
@@ -137,7 +138,7 @@ export default function RecipeDetailScreen(props) {
                             </View>
                             <View className="flex items-center py-2 space-y-1">
                                 <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
-                                    03
+                                    {meal?.Servings}
                                 </Text>
                                 <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
                                     Servings
@@ -153,7 +154,7 @@ export default function RecipeDetailScreen(props) {
                             </View>
                             <View className="flex items-center py-2 space-y-1">
                                 <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
-                                    103
+                                    {meal?.Calories}
                                 </Text>
                                 <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
                                     Cal
@@ -172,7 +173,7 @@ export default function RecipeDetailScreen(props) {
                                     
                                 </Text>
                                 <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
-                                    Easy
+                                    {meal?.Difficulty}
                                 </Text>
                             </View>
                         </View>
@@ -183,22 +184,14 @@ export default function RecipeDetailScreen(props) {
                         <Text style={{fontSize: hp(2.5)}} className="font-bold flex-1 text-neutral-700">
                             Ingredients
                         </Text>
-                        <View className="space-y-2 ml-3">
-                            {
-                                ingredientsIndexes(meal).map(i=>{
-                                    return (
-                                        <View key={i} className="flex-row space-x-4">
-                                            <View style={{height: hp(1.5), width: hp(1.5)}}
-                                                className="bg-amber-300 rounded-full" />
-                                            <View className="flex-row space-x-2">
-                                                    <Text style={{fontSize: hp(1.7)}} className="font-extrabold text-neutral-700">{meal['strMeasure'+i]}</Text>
-                                                    <Text style={{fontSize: hp(1.7)}} className="font-medium text-neutral-600">{meal['strIngredient'+i]}</Text>
-                                            </View>
-                                        </View>
-                                    )
-                                })
-                            }
-                        </View>
+                                  <View className="space-y-2 ml-3">
+                                      {meal?.Ingredients.split(',').map((ingredient, index) => (
+                                          <Text key={index} style={{ fontSize: hp(1.7) }} className="font-medium text-neutral-700">
+                                              {`\u2022 ${ingredient}`}
+                                          </Text>
+                                      ))}
+                                  </View>
+                                  
                     </Animated.View>
                     {/* instructions */}
                     <Animated.View entering={FadeInDown.delay(300).duration(700).springify().damping(12)} className="space-y-4">
@@ -206,43 +199,11 @@ export default function RecipeDetailScreen(props) {
                             Instructions
                         </Text>
                         <Text style={{fontSize: hp(1.6)}} className="text-neutral-700">
-                            {
-                                meal?.strInstructions
-                            }
+                            {meal?.Instruction}
                         </Text>
                     </Animated.View>
 
-                    {/* recipe video */}
-
-                    {
-                        meal.strYoutube && (
-                            <Animated.View entering={FadeInDown.delay(400).duration(700).springify().damping(12)} className="space-y-4">
-                                <Text style={{fontSize: hp(2.5)}} className="font-bold flex-1 text-neutral-700">
-                                    Recipe Video
-                                </Text>
-                                <View>
-                                    {/* YoutubeIfram uses webview and it does not work properly on android (until its fixed we'll just show the video on ios) */}
-                                    {
-                                        ios? (
-                                            <YouTubeIframe
-                                                webViewProps={{
-                                                    overScrollMode: "never" // a fix for webview on android - which didn't work :(
-                                                }}
-                                                videoId={getYoutubeVideoId(meal.strYoutube)}
-                                                height={hp(30)}
-                                            />
-                                        ):(
-                                            <TouchableOpacity className="mb-5" onPress={()=> handleOpenLink(meal.strYoutube)}>
-                                                <Text className="text-blue-600" style={{fontSize: hp(2)}}>{meal.strYoutube}</Text>
-                                            </TouchableOpacity>
-                                            
-                                        )
-                                    }
-                                    
-                                </View>
-                            </Animated.View>
-                        )
-                    }
+                    
 
 
                 </View>
