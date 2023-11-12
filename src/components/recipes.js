@@ -12,7 +12,7 @@ export default function Recipes({ meals }) {
     return (
       <View className="mx-4 space-y-3">
         <Text style={{ fontSize: hp(3) }} className="font-semibold text-neutral-600">
-          Recipes
+          Recommendations
         </Text>
         <View>
           {meals.length === 0 ? (

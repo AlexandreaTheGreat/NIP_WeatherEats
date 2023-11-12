@@ -12,20 +12,43 @@ import YouTubeIframe from 'react-native-youtube-iframe';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
+import { useFavorites } from './FavoritesContext';
 
 const ios = Platform.OS=='ios';
 
 
 
 export default function RecipeDetailScreen(props) {
-    let item = props.route.params;
+    const item = props.route.params;
     const [isFavourite, setIsFavourite] = useState(false);
     const navigation = useNavigation();
     const [meal, setMeal] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { favorites = [], addToFavorites, removeFromFavorites } = useFavorites();
+
+    const { recipe, setFavorites } = props.route.params || {};
+    const favoriteItems = Array.isArray(favorites) ? favorites : [];
+    console.log('props.route.params:', item); // Log the entire params object
+    console.log('favorites:', favorites); // Log the favorites value
+    console.log('favoriteItems:', favoriteItems);
+    
+
+    const isFavorite = favorites.some((fav) => fav.id === item.id);
+
+    const handleToggleFavorite = () => {
+        setIsFavourite(!isFavourite);
+    
+        // Update favorites array
+        if (isFavorite) {
+            removeFromFavorites(item.id);
+        } else {
+            addToFavorites(item);
+        }
+    };
 
     useEffect(() => {
         const apiEndpoint = `http://192.168.100.129:5000/api/HotandHumid/${item.id}`;
+        console.log(apiEndpoint);
         getMealData(apiEndpoint);
       }, []);
       
@@ -72,7 +95,7 @@ export default function RecipeDetailScreen(props) {
     }
 
   return (
-    <View className="flex-1 bg-white relative">
+    <View style={{backgroundColor: '#E3F0F6', flex: 1}}>
         <StatusBar style={"light"} />
         <ScrollView
             showsVerticalScrollIndicator={false}
@@ -92,10 +115,10 @@ export default function RecipeDetailScreen(props) {
         {/* back button */}
         <Animated.View entering={FadeIn.delay(200).duration(1000)} className="w-full absolute flex-row justify-between items-center pt-14">
             <TouchableOpacity onPress={()=> navigation.goBack()} className="p-2 rounded-full ml-5 bg-white">
-                <ChevronLeftIcon size={hp(3.5)} strokeWidth={4.5} color="#fbbf24" />
+                <ChevronLeftIcon size={hp(3.5)} strokeWidth={4.5} color="#0077B6" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=> setIsFavourite(!isFavourite)} className="p-2 rounded-full mr-5 bg-white">
-                <HeartIcon size={hp(3.5)} strokeWidth={4.5} color={isFavourite? "red": "gray"} />
+                <TouchableOpacity onPress={handleToggleFavorite} className="p-2 rounded-full mr-5 bg-white">
+            <HeartIcon size={hp(3.5)} strokeWidth={4.5} color={isFavourite ? "red" : "gray"} />
             </TouchableOpacity>
         </Animated.View>
 
@@ -111,12 +134,12 @@ export default function RecipeDetailScreen(props) {
                         {meal?.Name}
                         </Text>
                         <Text style={{fontSize: hp(2)}} className="font-medium flex-1 text-neutral-500">
-                            Desription
+                            Description
                         </Text>
                     </Animated.View>
                     {/* misc */}
                     <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} className="flex-row justify-around">
-                        <View className="flex rounded-full bg-amber-300 p-2">
+                        <View className="flex rounded-full bg-sky-600 p-2">
                             <View 
                                 style={{height: hp(6.5), width: hp(6.5)}}
                                 className="bg-white rounded-full flex items-center justify-center"
@@ -124,12 +147,12 @@ export default function RecipeDetailScreen(props) {
                                 <ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
                             </View>
                             <View className="flex items-center py-2 space-y-1">
-                                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(2)}} className="font-bold text-white">
                                     {meal?.CookingTime}
                                 </Text>
                             </View>
                         </View>
-                        <View className="flex rounded-full bg-amber-300 p-2">
+                        <View className="flex rounded-full bg-sky-600 p-2">
                             <View 
                                 style={{height: hp(6.5), width: hp(6.5)}}
                                 className="bg-white rounded-full flex items-center justify-center"
@@ -137,15 +160,15 @@ export default function RecipeDetailScreen(props) {
                                 <UsersIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
                             </View>
                             <View className="flex items-center py-2 space-y-1">
-                                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(2)}} className="font-bold text-white">
                                     {meal?.Servings}
                                 </Text>
-                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-white">
                                     Servings
                                 </Text>
                             </View>
                         </View>
-                        <View className="flex rounded-full bg-amber-300 p-2">
+                        <View className="flex rounded-full bg-sky-600 p-2">
                             <View 
                                 style={{height: hp(6.5), width: hp(6.5)}}
                                 className="bg-white rounded-full flex items-center justify-center"
@@ -153,15 +176,15 @@ export default function RecipeDetailScreen(props) {
                                 <FireIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
                             </View>
                             <View className="flex items-center py-2 space-y-1">
-                                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(2)}} className="font-bold text-white">
                                     {meal?.Calories}
                                 </Text>
-                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-white">
                                     Cal
                                 </Text>
                             </View>
                         </View>
-                        <View className="flex rounded-full bg-amber-300 p-2">
+                        <View className="flex rounded-full bg-sky-600 p-2">
                             <View 
                                 style={{height: hp(6.5), width: hp(6.5)}}
                                 className="bg-white rounded-full flex items-center justify-center"
@@ -169,10 +192,10 @@ export default function RecipeDetailScreen(props) {
                                 <Square3Stack3DIcon size={hp(4)} strokeWidth={2.5} color="#525252" />
                             </View>
                             <View className="flex items-center py-2 space-y-1">
-                                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(2)}} className="font-bold text-white">
                                     
                                 </Text>
-                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-neutral-700">
+                                <Text style={{fontSize: hp(1.3)}} className="font-bold text-white">
                                     {meal?.Difficulty}
                                 </Text>
                             </View>
